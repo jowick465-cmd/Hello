@@ -123,7 +123,7 @@ async function deployScript(name) {
   const composePath = path.join(dir, 'docker-compose.yml');
   if (!fs.existsSync(composePath)) return { error: `No docker-compose.yml for ${name}` };
   try {
-    const { stdout } = await execAsync(`cd "${dir.replace(/\\/g, '/')}" && docker compose up -d`, { timeout: 120000 });
+    const { stdout } = await execAsync(`cd "${dir.replace(/\\/g, '/')}" && /usr/local/bin/docker-compose up -d`, { timeout: 120000 });
     return { success: true, output: stdout };
   } catch (err) {
     return { error: err.stderr || err.message };
@@ -135,7 +135,7 @@ async function undeployScript(name) {
   const composePath = path.join(dir, 'docker-compose.yml');
   if (!fs.existsSync(composePath)) return { error: `No docker-compose.yml for ${name}` };
   try {
-    const { stdout } = await execAsync(`cd "${dir.replace(/\\/g, '/')}" && docker compose down`, { timeout: 60000 });
+    const { stdout } = await execAsync(`cd "${dir.replace(/\\/g, '/')}" && /usr/local/bin/docker-compose down`, { timeout: 60000 });
     return { success: true, output: stdout };
   } catch (err) {
     return { error: err.stderr || err.message };
@@ -144,7 +144,7 @@ async function undeployScript(name) {
 
 // ── Serve Dashboard HTML ────────────────────────────────────────
 function serveDashboard(res) {
-  const dashboardPath = path.join(__dirname, 'dashboard.html');
+  const dashboardPath = path.join(__dirname, '..', 'dashboard.html');
   fs.readFile(dashboardPath, 'utf-8', (err, html) => {
     if (err) {
       res.writeHead(500, { 'Content-Type': 'text/plain' });

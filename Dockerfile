@@ -2,28 +2,29 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install deps first (layer caching)
 COPY package.json package-lock.json ./
 RUN npm ci --unsafe-perm
 
-# Copy source files for Vite build
 COPY index.html vite.config.js ./
 COPY src/ ./src/
 
-# Build the Vite app
 RUN node node_modules/vite/bin/vite.js build
 
 # ── Manager: Dashboard + Docker API ──────────────────────────────
 FROM node:22-alpine AS manager
 
 WORKDIR /app
-RUN apk add --no-cache dumb-init curl docker-cli docker-compose-v2
+RUN apk add --no-cache dumb-init curl docker-cli \
+    && curl -sL https://github.com/docker/compose/releases/download/v2.29.1/docker-compose-linux-x86_64 \
+       -o /usr/local/bin/docker-compose \
+    && chmod +x /usr/local/bin/docker-compose \
+    && ln -s /usr/local/bin/docker-compose /usr/local/bin/docker-compose-v2
 
 COPY package.json package-lock.json ./
 RUN npm ci --production --ignore-scripts --unsafe-perm
 
-COPY src/manager-server.cjs ./
-COPY src/dashboard.html ./dashboard.html
+COPY src/docker-manager.cjs ./
+COPY dashboard.html ./dashboard.html
 COPY scripts/ scripts/
 
 EXPOSE 3001
@@ -32,14 +33,13 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=3 \
   CMD wget -q --spider http://localhost:3001/health || exit 1
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["node", "manager-server.cjs"]
+CMD ["node", "docker-manager.cjs"]
 
 # ── Production: Vite app via nginx ────────────────────────────────
 FROM nginx:alpine AS production
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Custom nginx config
 COPY <<'NGINX_CONF' /etc/nginx/conf.d/default.conf
 server {
     listen 3000;
