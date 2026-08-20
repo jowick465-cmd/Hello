@@ -1,0 +1,76 @@
+/* ═════════════════════════════════════════════════════════════════════
+   src/fonts.css — type system, font faces, and CDN loading for our app.
+   Consumed by src/app.js via a dynamic <link> injection so the rest of
+   the document can keep reading while the fonts settle.
+   ═════════════════════════════════════════════════════════════════════ */
+
+/* ── Document-wide type defaults ──────────────────────────────────── */
+:root {
+  --font-mono-system: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "DejaVu Sans Mono", source-code-pro, monospace;
+  --font-stack-override: "Archivo", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-size-root: 16px;
+  --line-height-tight : 1.15;
+  --line-height-body : 1.55;
+  --letter-spacing-tight : -0.01em;
+}
+
+html {
+  font-family: var(--font-stack-override);
+  font-size var(--font-size-root);
+  line-height var(--line-height-body);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* ── Custom font faces ────────────────────────────────────────────── */
+/* Only load faces we actually render. Each face is paired with a
+   weight axis, normal/italic, and a locally check so offline copies win. */
+
+/* Inline Code Mono — used for shell snippets, logs, JSON, code blocks
+   in emails and status lines. Falls back to a system mono stack. */
+@font-face {
+  font-family: "Source Code Pro";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: local("Source Code Pro"), local("SourceCodePro"),
+    url("https://fonts.gstatic.com/s/sourcecodepro/v501/He10pc4QX5A7F0NgQu5QzoN4w7n4U4D3C4Q.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Source Code Pro";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: local("Source Code Pro Bold"), local("SourceCodePro-Bold"),
+    url("https://fonts.gstatic.com/s/sourcecodepro/v501/He10pc4QX5A7F0NgQu5QzoN4w7n4U4D3C5A.woff2") format("woff2");
+}
+
+/* Archivo — our primary display/UI font. Two weights only to keep the
+   pipe light; the CDN link in index.html is the primary delivery path
+   and this @font-face is a safety net if the <link> is ever dropped. */
+@font-face {
+  font-family: "Archivo";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: local("Archivo"), local("Archivo-Regular"),
+    url("https://fonts.gstatic.com/s/archivo/v16/YT--l804t7328Kz4Y1pPjlKq9A9ra3W1wCW7K-hi4.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Archivo";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: local("Archivo Bold"), local("Archivo-Bold"),
+    url("https://fonts.gstatic.com/s/archivo/v16/YT--l804t7328Kz4Y1pPjlKq9A9ra3W1wCW7K-kj4.woff2") format("woff2");
+}
+
+/* ── Utility selectors for type scaffolding ───────────────────────── */
+.font-mono { font-family: var(--font-mono-system); }
+.font-display { font-family: "Archivo", var(--font-stack-override); }
+.font-body { font-family: var(--font-stack-override); }
+
+.text-tight   { line-height: var(--line-height-tight); }
+.text-body    { line-height: var(--line-height-body); }
+
+.ls-tight    { letter-spacing: var(--ls-tight); }
