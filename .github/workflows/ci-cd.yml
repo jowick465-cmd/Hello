@@ -34,15 +34,22 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Verify Dockerfile exists
+        run: ls -la Dockerfile && head -5 Dockerfile
+
       - uses: docker/setup-buildx-action@v3
+
       - uses: docker/login-action@v3
         with:
           registry: ${{ env.GHCR_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile
           target: production
           push: true
           tags: |
@@ -50,6 +57,9 @@ jobs:
             ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          provenance: false
+          sbom: false
+
       - name: Image summary
         run: |
           echo "Pushed to GHCR"
