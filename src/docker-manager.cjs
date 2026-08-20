@@ -17,8 +17,45 @@ async function dockerRun(...args) {
   }
 }
 
-// ── Parse docker ps output (no --format, use plain table) ─────
+// ── Parse docker ps with --format json ──────────────────────────
 function parseContainerTable(text) {
+  if (!text || !text.trim()) return [];
+  try {
+    const arr = JSON.parse(text.trim());
+    return (Array.isArray(arr) ? arr : [arr]).map(c => ({
+      id: c.ID?.slice(0, 12) || c.Id?.slice(0, 12) || c.Names?.[0]?.replace('/','').slice(0, 12),
+      name: c.Names?.[0]?.replace('/', '') || c.Name || c.ID || c.Id,
+      image: c.Image || '',
+      command: c.Command || '',
+      created: c.CreatedAt || '',
+      status: c.Status || '',
+      ports: (c.Ports || []).map(p =>
+        `${p.PublicPort || p.Port?.split('/')[0]}:${p.PrivatePort || p.Port?.split('/')[1]}`
+      ).filter(Boolean).join(', ') || '',
+      running: !c.State?.includes('Exited') && c.State !== 'exited',
+    }));
+  } catch {
+    // Fallback for older Docker
+    return [];
+  }
+}
+
+// ── List containers ─────────────────────────────────────────────
+async function listContainers(all = false) {
+  const args = all ? ['ps', '-a', '--format', '{{json .}}'] : ['ps', '--format', '{{json .}}'];
+  const { ok, data, error } = await dockerRun(...args);
+  if (!ok) {
+    // Fallback to plain table
+    const fallback = all ? ['ps', '-a'] : ['ps'];
+    const { ok: ok2, data: data2, error: err2 } = await dockerRun(...fallback);
+    if (!ok2) return { error: err2 };
+    return parseContainerTableFallback(data2);
+  }
+  return parseContainerTable(data);
+}
+
+// ── Fallback parser (plain table) ───────────────────────────────
+function parseContainerTableFallback(text) {
   const lines = text.trim().split('\n').filter(Boolean);
   if (lines.length < 2) return [];
   const containers = [];
@@ -44,14 +81,6 @@ function parseContainerTable(text) {
     }
   }
   return containers;
-}
-
-// ── List containers ─────────────────────────────────────────────
-async function listContainers(all = false) {
-  const args = all ? ['ps', '-a'] : ['ps'];
-  const { ok, data, error } = await dockerRun(...args);
-  if (!ok) return { error };
-  return parseContainerTable(data);
 }
 
 // ── Container actions ──────────────────────────────────────────
