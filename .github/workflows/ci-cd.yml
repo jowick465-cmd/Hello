@@ -49,15 +49,24 @@ jobs:
         run: |
           echo "=== Building production image ==="
           echo "Dockerfile target: production"
-          docker buildx build \
+          set -x
+          docker build \
             --target production \
             --tag ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:${{ env.IMAGE_TAG }} \
             --tag ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:latest \
-            --push \
-            --cache-from type=gha \
-            --cache-to type=gha,mode=max \
+            --provenance false \
+            --sbom false \
             .
-          echo "=== Build + push complete ==="
+          echo "=== Build complete, testing image ==="
+          docker images ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:${{ env.IMAGE_TAG }}
+
+      - name: Push to GHCR
+        run: |
+          echo "=== Pushing to GHCR ==="
+          set -x
+          docker push ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:${{ env.IMAGE_TAG }}
+          docker push ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:latest
+          echo "=== Push complete ==="
 
       - name: Image summary
         run: |
