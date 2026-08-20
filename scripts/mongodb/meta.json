@@ -1,0 +1,13 @@
+{
+  "name": "mongodb",
+  "displayName": "MongoDB",
+  "description": "MongoDB 7 NoSQL document database with a root user and persistent storage.",
+  "category": "database",
+  "tags": ["mongodb", "nosql", "document-db", "json"],
+  "ports": { "27017": "27017" },
+  "volumes": ["mongo-data:/data/db"],
+  "environment": {
+    "MONGO_INITDB_ROOT_USERNAME": "admin",
+    "MONGO_INITDB_ROOT_PASSWORD": "adminpassword"
+  }
+}

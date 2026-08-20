@@ -7,8 +7,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src/",
-    "test": "echo 'Vite app — visual testing via browser; no unit tests configured' && exit 0",
-    "start": "npx serve dist -l 3000"
+    "test": "echo 'Vite app — visual testing' && exit 0",
+    "start": "npx serve dist -l 3000",
+    "manager": "node src/manager-server.js"
   },
   "dependencies": {},
   "devDependencies": {

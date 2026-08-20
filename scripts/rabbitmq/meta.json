@@ -1,0 +1,14 @@
+{
+  "name": "rabbitmq-msg",
+  "displayName": "RabbitMQ",
+  "description": "RabbitMQ 3 message broker with management UI. Supports AMQP, MQTT, and STOMP protocols.",
+  "category": "messaging",
+  "tags": ["rabbitmq", "mq", "message-broker", "amqp", "queue"],
+  "ports": { "5672": "5672", "15672": "15672" },
+  "volumes": ["rabbitmq-data:/var/lib/rabbitmq"],
+  "environment": {
+    "RACK_ENV": "production",
+    "RABBITMQ_DEFAULT_USER": "admin",
+    "RABBITMQ_DEFAULT_PASS": "adminpassword"
+  }
+}

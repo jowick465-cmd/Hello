@@ -4,7 +4,6 @@ import './style.css';
 const title = document.getElementById('title');
 const sub = document.getElementById('sub');
 
-// Split title into letters
 const letters = title.textContent.split('');
 title.textContent = '';
 letters.forEach((ch, i) => {
@@ -16,16 +15,13 @@ letters.forEach((ch, i) => {
   title.appendChild(span);
 });
 
-// Sub text starts hidden
 sub.style.opacity = '0';
 sub.style.transform = 'translateY(20px)';
 
-// ── Timeline helper ─────────────────────────────────────────────
 function tl(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-// ── Entrance sequence (wrapped in IIFE for top-level safety) ────
 (async () => {
   await tl(300);
   title.classList.add('entrance');
@@ -59,6 +55,13 @@ function tl(ms) {
     requestAnimationFrame(glow);
   };
   requestAnimationFrame(glow);
+
+  // ── Container manager dashboard link ──────────────────────────
+  const dashLink = document.createElement('a');
+  dashLink.href = '/dashboard';
+  dashLink.className = 'dash-link';
+  dashLink.textContent = '🐳 Container Manager →';
+  document.getElementById('app').appendChild(dashLink);
 
   console.log('🚀 Vite hello world running — CICD pipeline deployed');
 })();

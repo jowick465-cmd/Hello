@@ -25,31 +25,17 @@ jobs:
       - run: npm ci
       - run: npm run lint
 
-  build:
+  build-and-push:
     needs: [lint]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       packages: write
+    outputs:
+      image_uri: ${{ steps.build.outputs.image_uri }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Verify project files
-        run: |
-          echo "=== Project files ==="
-          ls -la
-          echo ""
-          echo "=== Dockerfile ==="
-          cat Dockerfile
-          echo ""
-          echo "=== package.json ==="
-          cat package.json
-
-      - name: Verify Dockerfile builds locally
-        run: |
-          docker build -f Dockerfile --target production -t test-image .
-          echo "Local build OK"
 
       - uses: docker/setup-buildx-action@v3
 
@@ -59,61 +45,85 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/build-push-action@v6
+      - name: Build + push to GHCR
+        id: build
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           target: production
           push: true
-          tags: ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:${{ env.IMAGE_TAG }}
+          tags: |
+            ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:${{ env.IMAGE_TAG }}
+            ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Tag latest
-        run: |
-          docker build -f Dockerfile --target production -t ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:latest .
-          echo "Tagged latest"
-
       - name: Image summary
         run: |
-          echo "GHCR image: ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:${{ env.IMAGE_TAG }}"
+          echo "✅ Pushed to GHCR:"
+          echo "   ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:${{ env.IMAGE_TAG }}"
+          echo "   ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:latest"
 
   deploy-self-hosted:
-    needs: [build]
+    needs: [build-and-push]
     runs-on: self-hosted
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    environment: production
     steps:
       - uses: docker/login-action@v3
         with:
           registry: ${{ env.GHCR_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Stop & remove old container
         run: |
           docker stop ${{ env.IMAGE_NAME }} || true
           docker rm ${{ env.IMAGE_NAME }} || true
+
       - name: Pull from GHCR
         run: |
           docker pull ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:latest
+
       - name: Run container
         run: |
           docker run -d \
             --name ${{ env.IMAGE_NAME }} \
             -p 3000:3000 \
             ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:latest
+
+      - name: Deploy Container Manager (port 3001)
+        run: |
+          docker stop container-manager || true
+          docker rm container-manager || true
+          docker run -d \
+            --name container-manager \
+            -p 3001:3001 \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:latest \
+            --target manager
+
       - name: Health check
         run: |
           for i in $(seq 1 10); do
             if curl -sf http://localhost:3000/health > /dev/null 2>&1; then
-              echo "Container is healthy"
+              echo "✅ App container is healthy"
+            fi
+            if curl -sf http://localhost:3001/health > /dev/null 2>&1; then
+              echo "✅ Manager container is healthy"
+            fi
+            if curl -sf http://localhost:3000/health > /dev/null 2>&1 && curl -sf http://localhost:3001/health > /dev/null 2>&1; then
               exit 0
             fi
             echo "Waiting... ($i/10)"
             sleep 2
           done
-          echo "Container failed health check"
+          echo "❌ Container failed health check"
           docker logs ${{ env.IMAGE_NAME }}
+          docker logs container-manager
           exit 1
+
       - name: Show running container
         run: |
           docker ps --filter "name=${{ env.IMAGE_NAME }}" --format "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"

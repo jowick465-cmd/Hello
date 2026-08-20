@@ -1,28 +1,4 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html, body {
-  height: 100%;
-  overflow: hidden;
-  background: #0a0a0f;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  color: #fff;
-}
-
-#app {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  position: relative;
-  gap: 1rem;
-}
-
-/* ── Crazy entrance ─────────────────────────────────────────── */
+/* ── Crazy entrance ───────────────────────────────────────────── */
 .title {
   font-size: clamp(2.5rem, 10vw, 6rem);
   font-weight: 900;
@@ -57,6 +33,37 @@ html, body {
   padding: 0 1rem;
 }
 
+/* ── Dashboard link ───────────────────────────────────────────── */
+.dash-link {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(88, 166, 255, 0.15);
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  border-radius: 9999px;
+  color: #58a6ff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+  animation: float 6s ease-in-out infinite;
+  z-index: 100;
+}
+
+.dash-link:hover {
+  background: rgba(88, 166, 255, 0.25);
+  border-color: rgba(88, 166, 255, 0.6);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(5deg); }
+}
+
 /* ── Particles ───────────────────────────────────────────────── */
 .particles {
   position: fixed;
@@ -70,28 +77,18 @@ html, body {
   background: rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   opacity: 0;
-  animation: float var(--dur, 6s) ease-in-out infinite;
+  animation: float-up var(--dur, 6s) ease-in-out infinite;
   animation-delay: var(--delay, 0s);
 }
 
-@keyframes float {
-  0% {
-    opacity: 0;
-    transform: translateY(0) scale(0);
-  }
-  20% {
-    opacity: 0.7;
-  }
-  80% {
-    opacity: 0.4;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-120vh) scale(1.2);
-  }
+@keyframes float-up {
+  0% { opacity: 0; transform: translateY(0) scale(0); }
+  20% { opacity: 0.7; }
+  80% { opacity: 0.4; }
+  100% { opacity: 0; transform: translateY(-120vh) scale(1.2); }
 }
 
-/* ── Background grid glow ─────────────────────────────────────── */
+/* ── Background ───────────────────────────────────────────────── */
 body::before {
   content: '';
   position: fixed;
@@ -104,6 +101,6 @@ body::before {
   z-index: 0;
 }
 
-#app, .title, .sub, .particle {
+#app, .title, .sub, .particle, .dash-link {
   z-index: 1;
 }

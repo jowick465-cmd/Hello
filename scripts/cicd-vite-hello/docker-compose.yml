@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  app:
+    image: ghcr.io/jowick465-cmd/Hello:latest
+    container_name: cicd-vite-hello
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3

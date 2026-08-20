@@ -1,0 +1,12 @@
+{
+  "name": "redis-cache",
+  "displayName": "Redis Cache",
+  "description": "Redis 7 in-memory data store with AOF persistence. Great for caching, session stores, and pub/sub.",
+  "category": "database",
+  "tags": ["redis", "cache", "kv-store", "in-memory"],
+  "ports": { "6379": "6379" },
+  "volumes": ["redis-data:/data"],
+  "environment": {
+    "REDIS_PASSWORD": "redispassword"
+  }
+}

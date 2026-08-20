@@ -1,0 +1,19 @@
+[
+  {
+    "name": "cicd-vite-hello",
+    "description": "Vite hello world with crazy entrance + ambient particles",
+    "category": "web-app",
+    "tags": ["vite", "static", "nginx"],
+    "dockerCompose": "docker-compose.yml",
+    "ports": { "3000": "3000" }
+  },
+  {
+    "name": "redis-cache",
+    "description": "Redis cache server with persistence",
+    "category": "database",
+    "tags": ["redis", "cache", "kv"],
+    "dockerCompose": "docker-compose.yml",
+    "ports": { "6379": "6379" },
+    "volumes": { "redis-data": "/data" }
+  }
+]

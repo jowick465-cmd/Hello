@@ -1,0 +1,11 @@
+{
+  "name": "prometheus-monitoring",
+  "displayName": "Prometheus",
+  "description": "Prometheus monitoring system and time-series database. Scrapes metrics and serves a query UI at /graph.",
+  "category": "monitoring",
+  "tags": ["prometheus", "monitoring", "metrics", "time-series", "observability"],
+  "ports": { "9090": "9090" },
+  "volumes": ["prometheus-data:/prometheus"],
+  "environment": {},
+  "note": "Add scrape configs in prometheus.yml after deploy."
+}
