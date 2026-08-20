@@ -35,8 +35,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify Dockerfile exists
-        run: ls -la Dockerfile && head -5 Dockerfile
+      - name: Verify project files
+        run: |
+          echo "=== Project files ==="
+          ls -la
+          echo ""
+          echo "=== Dockerfile ==="
+          cat Dockerfile
+          echo ""
+          echo "=== package.json ==="
+          cat package.json
+
+      - name: Verify Dockerfile builds locally
+        run: |
+          docker build -f Dockerfile --target production -t test-image .
+          echo "Local build OK"
 
       - uses: docker/setup-buildx-action@v3
 
@@ -46,25 +59,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/build-push-action@v5
+      - uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           target: production
           push: true
-          tags: |
-            ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:${{ env.IMAGE_TAG }}
-            ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:latest
+          tags: ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:${{ env.IMAGE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          provenance: false
-          sbom: false
+
+      - name: Tag latest
+        run: |
+          docker build -f Dockerfile --target production -t ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:latest .
+          echo "Tagged latest"
 
       - name: Image summary
         run: |
-          echo "Pushed to GHCR"
-          echo "${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:${{ env.IMAGE_TAG }}"
-          echo "${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:latest"
+          echo "GHCR image: ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:${{ env.IMAGE_TAG }}"
 
   deploy-self-hosted:
     needs: [build]
