@@ -1,0 +1,18 @@
+{
+  "name": "cicd-vite-hello",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src/",
+    "test": "echo 'Vite app — visual testing via browser; no unit tests configured' && exit 0",
+    "start": "npx serve dist -l 3000"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "eslint": "^9.0.0"
+  }
+}

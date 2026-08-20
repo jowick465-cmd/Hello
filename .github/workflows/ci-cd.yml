@@ -1,0 +1,79 @@
+name: CI/CD Vite Hello World
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: cicd-vite-hello
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+
+  build:
+    needs: [lint]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
+            -t ${{ env.IMAGE_NAME }}:latest \
+            --target production \
+            .
+      - run: docker images ${{ env.IMAGE_NAME }}
+
+  deploy-local:
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
+            -t ${{ env.IMAGE_NAME }}:latest \
+            --target production \
+            .
+      - name: Stop & remove old container
+        run: |
+          docker stop ${{ env.IMAGE_NAME }} || true
+          docker rm ${{ env.IMAGE_NAME }} || true
+      - name: Run container
+        run: |
+          docker run -d \
+            --name ${{ env.IMAGE_NAME }} \
+            -p 3000:3000 \
+            ${{ env.IMAGE_NAME }}:latest
+      - name: Health check
+        run: |
+          for i in $(seq 1 10); do
+            if curl -sf http://localhost:3000/health > /dev/null 2>&1; then
+              echo "✅ Container is healthy"
+              exit 0
+            fi
+            echo "Waiting... ($i/10)"
+            sleep 2
+          done
+          echo "❌ Container failed health check"
+          docker logs ${{ env.IMAGE_NAME }}
+          exit 1
