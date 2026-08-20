@@ -9,7 +9,7 @@
     "lint": "eslint src/",
     "test": "echo 'Vite app — visual testing' && exit 0",
     "start": "npx serve dist -l 3000",
-    "manager": "node src/docker-manager.js"
+    "manager": "node src/docker-manager.cjs"
   },
   "dependencies": {},
   "devDependencies": {
