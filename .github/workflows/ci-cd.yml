@@ -33,7 +33,7 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image_uri: ${{ steps.build.outputs.image_uri }}
+      image_uri: ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:${{ env.IMAGE_TAG }}
     steps:
       - uses: actions/checkout@v4
 
@@ -45,19 +45,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build + push to GHCR
-        id: build
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile
-          target: production
-          push: true
-          tags: |
-            ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:${{ env.IMAGE_TAG }}
-            ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Build image (production target)
+        run: |
+          echo "=== Building production image ==="
+          echo "Dockerfile target: production"
+          docker buildx build \
+            --target production \
+            --tag ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:${{ env.IMAGE_TAG }} \
+            --tag ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE }}:latest \
+            --push \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
+            .
+          echo "=== Build + push complete ==="
 
       - name: Image summary
         run: |
