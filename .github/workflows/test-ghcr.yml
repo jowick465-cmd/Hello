@@ -1,0 +1,32 @@
+name: Test GHCR Push
+
+on:
+  workflow_dispatch:
+
+jobs:
+  push-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push minimal image
+        run: |
+          echo "Building minimal nginx image..."
+          docker build \
+            -f .github/workflows/test-dockerfile \
+            -t ghcr.io/${{ github.repository }}/test-minimal:${{ github.sha }} \
+            --no-cache \
+            .
+          echo "Build complete"
+          docker push ghcr.io/${{ github.repository }}/test-minimal:${{ github.sha }}
+          echo "Push complete"
